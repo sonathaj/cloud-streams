@@ -1,9 +1,6 @@
 name: .NET
 
 on:
-  push:
-    branches:
-      - build-branch
   release:
     types: [published]
   workflow_dispatch:
