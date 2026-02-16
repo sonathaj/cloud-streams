@@ -13,6 +13,7 @@
 
 using CloudStreams.Core.Application.Services;
 using CloudStreams.Core.Resources;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 
 namespace CloudStreams.Core.Application.Queries.Subscriptions;
@@ -21,7 +22,7 @@ namespace CloudStreams.Core.Application.Queries.Subscriptions;
 /// Represents the <see cref="IQuery{TResult}"/> used to list the health of all <see cref="Subscription"/>s
 /// </summary>
 public class ListSubscriptionHealthQuery
-    : Query<IAsyncEnumerable<SubscriptionHealth>>
+    : Query<IEnumerable<SubscriptionHealth>>
 {
 
     /// <summary>
@@ -51,11 +52,11 @@ public class ListSubscriptionHealthQuery
 /// Represents the service used to handle <see cref="ListSubscriptionHealthQuery"/> instances
 /// </summary>
 public class ListSubscriptionHealthQueryHandler(IResourceRepository repository, ICloudEventStore eventStore)
-    : IQueryHandler<ListSubscriptionHealthQuery, IAsyncEnumerable<SubscriptionHealth>>
+    : IQueryHandler<ListSubscriptionHealthQuery, IEnumerable<SubscriptionHealth>>
 {
 
     /// <inheritdoc/>
-    public virtual async Task<IOperationResult<IAsyncEnumerable<SubscriptionHealth>>> HandleAsync(ListSubscriptionHealthQuery query, CancellationToken cancellationToken)
+    public virtual async Task<IOperationResult<IEnumerable<SubscriptionHealth>>> HandleAsync(ListSubscriptionHealthQuery query, CancellationToken cancellationToken)
     {
         var collection = await repository.ListAsync(Subscription.ResourceDefinition.Group, Subscription.ResourceDefinition.Version, Subscription.ResourceDefinition.Plural, query.Namespace, query.LabelSelectors, null, null, cancellationToken).ConfigureAwait(false);
         var subscriptions = collection.Items?.OfType<Subscription>() ?? Enumerable.Empty<Subscription>();

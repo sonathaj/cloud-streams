@@ -33,7 +33,7 @@ public class SubscriptionsController(IMediator mediator)
     /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
     /// <returns>A new <see cref="IActionResult"/></returns>
     [HttpGet("health")]
-    [ProducesResponseType(typeof(IAsyncEnumerable<SubscriptionHealth>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(IEnumerable<SubscriptionHealth>), (int)HttpStatusCode.OK)]
     [ProducesErrorResponseType(typeof(Neuroglia.ProblemDetails))]
     public virtual async Task<IActionResult> ListSubscriptionHealth([FromQuery] string? @namespace = null, [FromQuery] string? labelSelector = null, CancellationToken cancellationToken = default)
     {
