@@ -39,7 +39,7 @@ public class SubscriptionsController(IMediator mediator)
     {
         if (!this.ModelState.IsValid) return this.ValidationProblem(this.ModelState);
         List<LabelSelector>? labelSelectors = null;
-        if (!string.IsNullOrWhiteSpace(labelSelector)) labelSelectors = LabelSelector.ParseList(labelSelector);
+        if (!string.IsNullOrWhiteSpace(labelSelector)) labelSelectors = LabelSelector.ParseList(labelSelector).ToList();
         return this.Process(await this.Mediator.ExecuteAsync(new ListSubscriptionHealthQuery(@namespace, labelSelectors), cancellationToken).ConfigureAwait(false));
     }
 
