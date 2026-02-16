@@ -38,7 +38,8 @@ public class SubscriptionsController(IMediator mediator)
     public virtual async Task<IActionResult> ListSubscriptionHealth([FromQuery] string? @namespace = null, [FromQuery] string? labelSelector = null, CancellationToken cancellationToken = default)
     {
         if (!this.ModelState.IsValid) return this.ValidationProblem(this.ModelState);
-        var labelSelectors = string.IsNullOrWhiteSpace(labelSelector) ? null : LabelSelector.Parse(labelSelector).ToList();
+        List<LabelSelector>? labelSelectors = null;
+        if (!string.IsNullOrWhiteSpace(labelSelector)) labelSelectors = LabelSelector.ParseList(labelSelector);
         return this.Process(await this.Mediator.ExecuteAsync(new ListSubscriptionHealthQuery(@namespace, labelSelectors), cancellationToken).ConfigureAwait(false));
     }
 
