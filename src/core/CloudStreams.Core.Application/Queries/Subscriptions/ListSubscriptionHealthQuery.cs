@@ -58,7 +58,7 @@ public class ListSubscriptionHealthQueryHandler(IResourceRepository repository, 
     public virtual async Task<IOperationResult<IAsyncEnumerable<SubscriptionHealth>>> HandleAsync(ListSubscriptionHealthQuery query, CancellationToken cancellationToken)
     {
         var collection = await repository.ListAsync(Subscription.ResourceDefinition.Group, Subscription.ResourceDefinition.Version, Subscription.ResourceDefinition.Plural, query.Namespace, query.LabelSelectors, null, null, cancellationToken).ConfigureAwait(false);
-        var subscriptions = collection.Items.OfType<Subscription>();
+        var subscriptions = collection.Items?.OfType<Subscription>() ?? Enumerable.Empty<Subscription>();
         return this.Ok(this.ComputeHealthAsync(subscriptions, cancellationToken));
     }
 
