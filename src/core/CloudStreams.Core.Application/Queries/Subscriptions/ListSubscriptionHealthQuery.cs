@@ -89,7 +89,7 @@ public class ListSubscriptionHealthQueryHandler(IResourceRepository repository, 
             {
                 try
                 {
-                    var partitionMetadata = await eventStore.GetPartitionMetadataAsync(subscription.Spec.Partition, cancellationToken).ConfigureAwait(false);
+                    var partitionMetadata = await eventStore.GetPartitionMetadataAsync(subscription.Spec.Partition.Id, cancellationToken).ConfigureAwait(false);
                     health.PartitionLength = partitionMetadata.Length;
                     if (health.AckedOffset.HasValue)
                     {
