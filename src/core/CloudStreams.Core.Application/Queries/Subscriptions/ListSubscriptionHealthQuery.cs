@@ -59,7 +59,9 @@ public class ListSubscriptionHealthQueryHandler(IResourceRepository repository, 
     {
         var collection = await repository.ListAsync(Subscription.ResourceDefinition.Group, Subscription.ResourceDefinition.Version, Subscription.ResourceDefinition.Plural, query.Namespace, query.LabelSelectors, null, null, cancellationToken).ConfigureAwait(false);
         var subscriptions = collection.Items?.OfType<Subscription>() ?? Enumerable.Empty<Subscription>();
-        return this.Ok(this.ComputeHealthAsync(subscriptions, cancellationToken));
+        // Enumerate the async enumerable to materialize the health data before returning
+        var healthList = await this.ComputeHealthAsync(subscriptions, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return this.Ok(healthList);
     }
 
     /// <summary>
@@ -85,21 +87,25 @@ public class ListSubscriptionHealthQueryHandler(IResourceRepository repository, 
                 SubscriberReason = subscription.Status?.Subscriber?.Reason
             };
 
+            // Always return health data, even if we can't calculate lag
+            // This ensures subscriptions are visible for monitoring even when partition metadata is unavailable
             if (subscription.Spec.Partition != null)
             {
                 try
                 {
-                    var partitionMetadata = await eventStore.GetPartitionMetadataAsync(subscription.Spec.Partition.Id, cancellationToken).ConfigureAwait(false);
-                    health.PartitionLength = partitionMetadata.Length;
-                    if (health.AckedOffset.HasValue)
+                    var partitionMetadata = await eventStore.GetPartitionMetadataAsync(subscription.Spec.Partition, cancellationToken).ConfigureAwait(false);
+                    if (partitionMetadata != null)
                     {
-                        health.Lag = (long)partitionMetadata.Length - (long)health.AckedOffset.Value;
+                        health.PartitionLength = partitionMetadata.Length;
+                        if (health.AckedOffset.HasValue)
+                        {
+                            health.Lag = (long)partitionMetadata.Length - (long)health.AckedOffset.Value;
+                        }
                     }
                 }
-                catch (Exception)
+                catch
                 {
-                    // If we can't get partition metadata, leave length and lag as null
-                    // This allows the health check to still return other useful information
+                    // Partition metadata lookup failed - lag will remain null but subscription is still visible
                 }
             }
 
