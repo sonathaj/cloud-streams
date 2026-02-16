@@ -12,6 +12,7 @@
 // limitations under the License.
 
 using CloudStreams.Core.Application.Commands.Subscriptions;
+using CloudStreams.Core.Application.Queries.Subscriptions;
 
 namespace CloudStreams.Core.Api.Controllers;
 
@@ -23,6 +24,23 @@ namespace CloudStreams.Core.Api.Controllers;
 public class SubscriptionsController(IMediator mediator)
     : ClusterResourceApiController<Subscription>(mediator)
 {
+
+    /// <summary>
+    /// Lists the health of all subscriptions
+    /// </summary>
+    /// <param name="namespace">The namespace the subscriptions to list belong to, if any</param>
+    /// <param name="labelSelector">A comma-separated list of label selectors used to filter subscriptions by</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/></param>
+    /// <returns>A new <see cref="IActionResult"/></returns>
+    [HttpGet("health")]
+    [ProducesResponseType(typeof(IAsyncEnumerable<SubscriptionHealth>), (int)HttpStatusCode.OK)]
+    [ProducesErrorResponseType(typeof(Neuroglia.ProblemDetails))]
+    public virtual async Task<IActionResult> ListSubscriptionHealth([FromQuery] string? @namespace = null, [FromQuery] string? labelSelector = null, CancellationToken cancellationToken = default)
+    {
+        if (!this.ModelState.IsValid) return this.ValidationProblem(this.ModelState);
+        var labelSelectors = string.IsNullOrWhiteSpace(labelSelector) ? null : LabelSelector.Parse(labelSelector).ToList();
+        return this.Process(await this.Mediator.ExecuteAsync(new ListSubscriptionHealthQuery(@namespace, labelSelectors), cancellationToken).ConfigureAwait(false));
+    }
 
     /// <summary>
     /// Exports the specified subscription
